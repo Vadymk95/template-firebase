@@ -1,0 +1,259 @@
+---
+alwaysApply: true
+---
+
+# Project-Specific Rules
+
+> **Note:** These rules are for the Firebase + React 19 template project.
+> This is a generic template that can be used as a base for various SaaS applications.
+> For general rules that apply to all projects, see User Rules in Cursor settings.
+
+## Project Configuration
+
+### File Indexing and Exclusions
+
+- **`.cursorignore`** file in the project root automatically excludes files from Cursor's indexing
+- Files and directories listed in `.cursorignore` are not included in AI context to save tokens and improve performance
+- The `.cursorignore` file follows `.gitignore` syntax patterns
+- Cursor automatically reads `.cursorignore` from the project root - no additional configuration needed in rules
+
+## Code Formatting
+
+### Project-Specific Formatting
+
+- Use Prettier configuration from the project (trailingComma: 'none', single quotes, etc.)
+- Follow ESLint rules configured in `eslint.config.js`
+- Use 4 spaces for indentation
+
+## React and TypeScript
+
+### React 19
+
+- **DO NOT import React from 'react'** - React 19 does not require React import for JSX
+- Use only types from React: `import type { FC, PropsWithChildren } from 'react'`
+- Always use functional components
+
+### Functions and Components
+
+- **Always use arrow functions**, NOT function declarations
+- Type components with `FC` or `FC<PropsType>`
+- Example: `export const ComponentName: FC<ComponentProps> = () => { ... }`
+
+### Pages
+
+- For new pages, create the following structure:
+    - `PageName.tsx` - main file with component and **default export**
+    - `index.ts` - file with re-export via `React.lazy`
+
+Example structure:
+
+```typescript
+// PageName.tsx
+export const PageName: FC = () => { ... };
+export default PageName;
+
+// index.ts
+import { lazy } from 'react';
+export const PageName = lazy(() => import('./PageName'));
+```
+
+## TypeScript Typing
+
+### Strict Typing
+
+- **Always type everything** - variables, functions, props, hooks
+- **Avoid `any`** - linter does not allow `any` usage
+- Use `unknown` if type is truly unknown, then narrow via type guards
+- Use `type` for type aliases, `interface` for extensible structures
+
+### Types from Project
+
+- Search for existing types in `src/types/` (if exists)
+- Use types from constants when available
+- If type doesn't exist - create it in `src/types/index.ts` or next to usage
+
+## Constants and Enums
+
+### Using Constants
+
+- **DO NOT use magic strings and magic numbers**
+- Search for existing constants in `src/constants/` (if exists)
+- If constant doesn't exist - create it in `src/constants/` directory
+- Use descriptive names following UPPER_SNAKE_CASE convention
+
+### Constant Format
+
+- Use `as const` to create readonly objects
+- Export type from constant: `export type TypeName = (typeof CONST_NAME)[keyof typeof CONST_NAME]`
+
+Example:
+
+```typescript
+export const STATUS = {
+    IDLE: 'idle',
+    LOADING: 'loading'
+} as const;
+
+export type Status = (typeof STATUS)[keyof typeof STATUS];
+```
+
+## Comments
+
+### Comment Rules
+
+- Comments **only in English**
+- Comments **only for complex logic** that requires explanation
+
+Example of acceptable comment:
+
+```typescript
+// Complex algorithm that requires explanation
+// Handles edge cases and specific business logic
+const processData = (data: string) => { ... }
+```
+
+## Component Architecture
+
+### Logic and Hooks
+
+- **Always extract all logic into a local hook** next to the component
+- Hook should be in file `useComponentName.ts` in the same folder
+- Component imports hook: `import { useComponentName } from './useComponentName'`
+- Component should be maximally presentational (UI only)
+
+Example structure:
+
+```
+ComponentName/
+  ├── ComponentName.tsx (or index.tsx)
+  ├── ComponentName.test.tsx
+  └── useComponentName.ts
+```
+
+### Imports
+
+- Use path aliases: `@/components`, `@/constants`, `@/types`, `@/utils`
+- Group imports: external libraries first, then internal
+- Use `import type` for types
+- Follow import order rules from ESLint config
+
+## Testing
+
+### Required Tests
+
+- **Always write tests for new components**
+- Tests should be in file `ComponentName.test.tsx` next to the component
+- If component already had tests and you made changes - **update or supplement tests**
+- Cover main functionality, edge cases, and errors
+- Use Vitest and @testing-library/react
+
+### Test Structure
+
+- Use `describe` for grouping tests
+- Use `it` or `test` for individual tests
+- Use `beforeEach`, `afterEach` for setup/teardown when needed
+
+## Project Structure
+
+### Folders and Files
+
+- Components in `src/components/`:
+    - `common/` - common components (ErrorBoundary, etc.)
+    - `layout/` - layout components (Header, Footer, Main)
+    - `ui/` - UI primitives (button, input, card, etc.)
+- Pages in `src/pages/` (each page in its own folder with `index.tsx`)
+- Hooks in `src/hooks/`
+- Store in `src/store/` (Zustand stores)
+- Router in `src/router/`
+- Types in `src/types/` (if exists)
+- Constants in `src/constants/` (if exists)
+- Utilities in `src/lib/` and `src/utils/` (if exists)
+
+### Naming Conventions
+
+- Components: PascalCase (`ComponentName`)
+- Component files: PascalCase or kebab-case (follow existing style)
+- Hooks: camelCase with `use` prefix (`useComponentName`)
+- Constants: UPPER_SNAKE_CASE (`STATUS`, `ROUTES_PATH`)
+- Types: PascalCase (`ComponentProps`, `StatusType`)
+- Routes: Use `RoutesPath` object in `src/router/routes.ts` for route constants (if routing is used)
+
+## Additional Rules
+
+### Routing
+
+- Use **React Router v7** for routing (if routing is needed)
+- Routes configuration in `src/router/routes.ts` using `RoutesPath` object
+- Router setup in `src/router/index.tsx`
+- Use `React.lazy` for code splitting when needed
+
+### State Management
+
+- Use **Zustand** for global state management (stores in `src/store/`)
+- Use **TanStack Query** for server state and data fetching
+- Keep local state in components when possible, use Zustand for shared state
+
+### Firebase Integration
+
+- Firebase configuration in `src/lib/firebase.ts`
+- Use Firestore for data storage (if needed)
+- Use Firebase Analytics for tracking (if configured)
+
+### Error Handling
+
+- Always handle errors
+- Use ErrorBoundary for components (available in `src/components/common/ErrorBoundary`)
+- Show clear error messages to users
+- Handle loading and error states in TanStack Query
+
+### Performance
+
+- Use `React.memo` for components that re-render frequently
+- Use `useMemo` and `useCallback` when truly needed
+- Don't optimize prematurely
+- Leverage TanStack Query caching for data fetching
+
+### Accessibility
+
+- Use semantic HTML tags
+- Add ARIA attributes where needed
+- Ensure keyboard navigation
+- Use shadcn/ui components which include accessibility features
+
+## Git Commits and Pushes
+
+### Before Committing
+
+- **ALWAYS check files before committing and pushing**
+- Run linting: `npm run lint` or `eslint .`
+- Run formatting check: `npm run format:check` or `prettier --check .`
+- Run tests: `npm test` or `vitest run`
+- Fix any errors or warnings before committing
+
+### Commit Message Format
+
+- **MUST follow commitlint rules** from `commitlint.config.mjs`
+- Use conventional commit format: `type(scope): subject`
+- Allowed types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`, `test`, `revert`
+- Header maximum length: 96 characters
+- Format: `type(scope): subject` (scope is optional)
+
+### Commit Message Examples
+
+```
+feat(page): add new feature page
+fix(ui): handle form validation errors
+chore(deps): update dependencies
+docs(readme): update installation instructions
+style(button): fix spacing in component
+refactor(store): extract state management logic
+perf(query): optimize data fetching
+test(component): add tests for component functionality
+```
+
+### Before Pushing
+
+- Ensure all checks pass (lint, format, tests)
+- Review changed files with `git status` and `git diff`
+- Verify commit message follows commitlint rules
+- Only push if everything is correct
